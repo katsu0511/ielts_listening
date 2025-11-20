@@ -4,7 +4,7 @@ html, body, ul, p, button {
 }
 
 ul {
-  width: 200px;
+  width: 280px;
   padding: 20px 0;
   margin: 0 auto;
 }
@@ -50,9 +50,31 @@ button:hover {
   border-color: aquamarine;
 }
 
+.pause {
+  background-color: aqua;
+  border-color: aqua;
+}
+
+.disabled {
+  background-color: lightgray;
+  border-color: lightgray;
+}
+
+.disabled:hover {
+  opacity: 1;
+  cursor: not-allowed;
+}
+
 img {
-  display: block;
   width: 16px;
   height: 16px;
   margin: 6px 0;
+}
+
+.show {
+  display: block;
+}
+
+.hide {
+  display: none;
 }
