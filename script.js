@@ -8,9 +8,13 @@ const playTime = document.getElementById('play_time');
 const leftTime = document.getElementById('left_time');
 const back = document.getElementById('back');
 const forward = document.getElementById('forward');
+const next = document.getElementById('next');
+const nextImg = next.querySelector('.next');
+const endImg = next.querySelector('.end');
 const playArray = Array.from(document.getElementsByClassName('sound'));
 const pauseArray = Array.from(document.getElementsByClassName('pause'));
 const stopArray = Array.from(document.getElementsByClassName('stop'));
+const mode = localStorage.getItem('mode') ?? 'next';
 
 const changeToPause = (pauseImg, playImg) => {
   pauseImg.classList.remove('hide');
@@ -24,6 +28,35 @@ const changeToPlay = (pauseImg, playImg) => {
   pauseImg.classList.add('hide');
   playImg.classList.remove('hide');
   playImg.classList.add('show');
+}
+
+const changeToEnd = () => {
+  next.classList.remove('next');
+  next.classList.add('end');
+  nextImg.classList.remove('show');
+  nextImg.classList.add('hide');
+  endImg.classList.remove('hide');
+  endImg.classList.add('show');
+  localStorage.setItem('mode', 'end');
+}
+
+const changeToNext = () => {
+  next.classList.remove('end');
+  next.classList.add('next');
+  nextImg.classList.remove('hide');
+  nextImg.classList.add('show');
+  endImg.classList.remove('show');
+  endImg.classList.add('hide');
+  localStorage.setItem('mode', 'next');
+}
+
+const changePlaybackRate = (rate) => {
+  if (audio && audio.playbackRate != Number(rate)) {
+    audio.playbackRate = Number(rate);
+    localStorage.setItem('speed', rate);
+    enableFuncs();
+    disableCurrentSpeed(rate);
+  }
 }
 
 const disable = (button) => {
@@ -53,6 +86,8 @@ const disableFuncs = () => {
   back.disabled = true;
   forward.classList.add('disabled');
   forward.disabled = true;
+  next.classList.add('disabled');
+  next.disabled = true;
 }
 
 const enableFuncs = () => {
@@ -68,6 +103,24 @@ const enableFuncs = () => {
   back.disabled = false;
   forward.classList.remove('disabled');
   forward.disabled = false;
+  next.classList.remove('disabled');
+  next.disabled = false;
+}
+
+const disableCurrentSpeed = (speed) => {
+  if (speed === '0.5') {
+    slower.classList.add('disabled');
+    slower.disabled = true;
+  } else if (speed === '0.75') {
+    slow.classList.add('disabled');
+    slow.disabled = true;
+  } else if (speed === '1.0') {
+    normal.classList.add('disabled');
+    normal.disabled = true;
+  } else {
+    fast.classList.add('disabled');
+    fast.disabled = true;
+  }
 }
 
 const managePauseButtons = (isDisabled) => {
@@ -111,12 +164,38 @@ const getMinutes = (second) => {
   return `${minute}:${second}`;
 }
 
+const playMP3 = (number) => {
+  audio = new Audio(`./mp3/${number}.mp3`);
+  audio.play();
+  const speed = localStorage.getItem('speed') ?? '1.0';
+  if (audio.playbackRate != Number(speed)) audio.playbackRate = Number(speed);
+  disableCurrentSpeed(speed);
+}
+
 const playAudio = (play) => {
   const p = play.previousElementSibling;
-  const num = p.textContent;
+  const number = p.textContent;
   if (audio && !audio.paused) audio.pause();
-  audio = new Audio(`./mp3/${num}.mp3`);
-  audio.play();
+  playMP3(number);
+}
+
+const getNextAudio = () => {
+  const cur = Number(audio.src.split('/mp3/')[1].substring(0, 2));
+  if (cur === 40) return '01';
+  return cur + 1 < 10 ? `0${cur + 1}` : `${cur + 1}`;
+}
+
+const nextAudio = () => {
+  resetListeners();
+  audio.pause();
+  const next = getNextAudio();
+  playMP3(next);
+  addListeners();
+}
+
+const manageAudio = () => {
+  if (next.classList.contains('next')) nextAudio();
+  else reset();
 }
 
 const stopAudio = () => {
@@ -153,33 +232,39 @@ const updateTime = () => {
   current.style.left = lengthOfPlayTime + 'px';
 }
 
-const reset = () => {
+const addListeners = () => {
+  audio.addEventListener('loadedmetadata', getDuration);
+  audio.addEventListener('timeupdate', updateTime);
+  audio.addEventListener('ended', manageAudio);
+}
+
+const resetListeners = () => {
   audio.removeEventListener('loadedmetadata', getDuration);
   audio.removeEventListener('timeupdate', updateTime);
-  audio.removeEventListener('ended', reset);
+  audio.removeEventListener('ended', manageAudio);
+}
+
+const reset = () => {
+  resetListeners();
   disableFuncs();
   resetButtons();
   stopAudio();
 }
 
-const addLoadedMetadata = () => audio.addEventListener('loadedmetadata', getDuration);
-const addTimeUpdate = () => audio.addEventListener('timeupdate', updateTime);
-const addEnded = () => audio.addEventListener('ended', reset);
-
 fast.addEventListener('click', () => {
-  if (audio && audio.playbackRate != 1.5) audio.playbackRate = 1.5;
+  changePlaybackRate('1.5');
 });
 
 normal.addEventListener('click', () => {
-  if (audio && audio.playbackRate != 1.0) audio.playbackRate = 1.0;
+  changePlaybackRate('1.0');
 });
 
 slow.addEventListener('click', () => {
-  if (audio && audio.playbackRate != 0.75) audio.playbackRate = 0.75;
+  changePlaybackRate('0.75');
 });
 
 slower.addEventListener('click', () => {
-  if (audio && audio.playbackRate != 0.5) audio.playbackRate = 0.5;
+  changePlaybackRate('0.5');
 });
 
 back.addEventListener('click', () => {
@@ -190,15 +275,18 @@ forward.addEventListener('click', () => {
   if (audio && audio.currentTime < audio.duration - 5) audio.currentTime += 5;
 });
 
+next.addEventListener('click', () => {
+  if (nextImg.classList.contains('show')) changeToEnd();
+  else changeToNext();
+});
+
 playArray.forEach(function(play) {
   play.addEventListener('click', () => {
-    playAudio(play);
-    addLoadedMetadata();
-    addTimeUpdate();
-    addEnded();
     enableFuncs();
     managePauseButtons(false);
     manageStopButtons(false);
+    playAudio(play);
+    addListeners();
   });
 });
 
@@ -216,3 +304,5 @@ stopArray.forEach(function(stop) {
     if (audio) reset();
   });
 });
+
+if (mode === 'end') changeToEnd();
