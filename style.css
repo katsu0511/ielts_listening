@@ -26,10 +26,19 @@ html, body, ul, p, button {
   height: 40px;
   border: none;
   border-radius: 50%;
-  margin: 0 40px;
+  margin: 0 35px;
 }
 
-#back img, #forward img {
+#next {
+  background-color: transparent;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  margin: 5px 35px;
+}
+
+#back img, #forward img, #next img {
   width: 100%;
   height: 100%;
   margin: 0;
