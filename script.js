@@ -1,4 +1,3 @@
-let audio = null;
 const fast = document.getElementById('fast');
 const normal = document.getElementById('normal');
 const slow = document.getElementById('slow');
@@ -7,7 +6,11 @@ const current = document.getElementById('current_time');
 const playTime = document.getElementById('play_time');
 const leftTime = document.getElementById('left_time');
 const back = document.getElementById('back');
+const activeBack = back.querySelector('.active_back');
+const inactiveBack = back.querySelector('.inactive_back');
 const forward = document.getElementById('forward');
+const activeForward = forward.querySelector('.active_forward');
+const inactiveForward = forward.querySelector('.inactive_forward');
 const next = document.getElementById('next');
 const nextImg = next.querySelector('.next');
 const endImg = next.querySelector('.end');
@@ -15,6 +18,7 @@ const playArray = Array.from(document.getElementsByClassName('sound'));
 const pauseArray = Array.from(document.getElementsByClassName('pause'));
 const stopArray = Array.from(document.getElementsByClassName('stop'));
 const mode = localStorage.getItem('mode') ?? 'next';
+let audio = null;
 
 const changeToPause = (pauseImg, playImg) => {
   pauseImg.classList.remove('hide');
@@ -84,10 +88,16 @@ const disableFuncs = () => {
   slower.disabled = true;
   back.classList.add('disabled');
   back.disabled = true;
+  activeBack.classList.remove('show');
+  activeBack.classList.add('hide');
+  inactiveBack.classList.remove('hide');
+  inactiveBack.classList.add('show');
   forward.classList.add('disabled');
   forward.disabled = true;
-  next.classList.add('disabled');
-  next.disabled = true;
+  activeForward.classList.remove('show');
+  activeForward.classList.add('hide');
+  inactiveForward.classList.remove('hide');
+  inactiveForward.classList.add('show');
 }
 
 const enableFuncs = () => {
@@ -101,10 +111,16 @@ const enableFuncs = () => {
   slower.disabled = false;
   back.classList.remove('disabled');
   back.disabled = false;
+  activeBack.classList.remove('hide');
+  activeBack.classList.add('show');
+  inactiveBack.classList.remove('show');
+  inactiveBack.classList.add('hide');
   forward.classList.remove('disabled');
   forward.disabled = false;
-  next.classList.remove('disabled');
-  next.disabled = false;
+  activeForward.classList.remove('hide');
+  activeForward.classList.add('show');
+  inactiveForward.classList.remove('show');
+  inactiveForward.classList.add('hide');
 }
 
 const disableCurrentSpeed = (speed) => {
@@ -268,11 +284,13 @@ slower.addEventListener('click', () => {
 });
 
 back.addEventListener('click', () => {
-  if (audio && audio.currentTime > 5) audio.currentTime -= 5;
+  if (audio && audio.currentTime >= 5) audio.currentTime -= 5;
+  else if (audio && audio.currentTime < 5) audio.currentTime = 0;
 });
 
 forward.addEventListener('click', () => {
-  if (audio && audio.currentTime < audio.duration - 5) audio.currentTime += 5;
+  if (audio && audio.currentTime <= audio.duration - 5) audio.currentTime += 5;
+  else if (audio && audio.currentTime > audio.duration - 5) audio.currentTime = audio.duration;
 });
 
 next.addEventListener('click', () => {
